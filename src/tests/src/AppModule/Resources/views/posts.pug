@@ -1,0 +1,20 @@
+doctype html
+html(lang="fr")
+    head
+        meta(charset="utf8")
+        meta(http-equiv="Content-Language" content="fr")
+        meta(name="viewport" content="initial-scale=1, maximum-scale=1")
+        title ResonanceJS
+    body
+        h1 ResonanceJS
+        div#react-container
+        script(src="/socket.io/socket.io.js")
+        script.
+            let socket = io();
+            setTimeout(() => {
+                socket.emit('app:posts:event');
+                socket.on('say:hello', data => {
+                    let container = document.getElementById('react-container');
+                    container.append(data);
+                });
+            }, 1500);

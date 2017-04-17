@@ -1,0 +1,57 @@
+{
+  "name": "resonance-js",
+  "version": "0.1.0",
+  "description": "Create real time application",
+  "main": "dist/index.js",
+  "typings": "src/index.ts",
+  "watch": {
+    "app": {
+      "patterns": ["dist"],
+      "extensions": "js"
+    },
+    "copy": {
+      "patterns": ["src"],
+      "extensions": "*",
+      "ignore": "*.ts"
+    },
+    "tsc": {
+      "patterns": ["src"],
+      "extensions": "ts"
+    }
+  },
+  "scripts": {
+    "app": "node dist/tests/app.js",
+    "copy": "copyfiles 1 -e '**/*.ts' -u 1 'src/**/*' dist",
+    "prepublishOnly": "npm run tsc && npm run copy",
+    "start": "npm-watch",
+    "test": "npm run tsc && npm run copy && mocha --recursive ./dist/tests/",
+    "tsc": "tsc"
+  },
+  "author": "Vincent CHAPRON",
+  "license": "MIT",
+  "bin": {
+    "resonance": "./bin/resonance"
+  },
+  "devDependencies": {
+    "@types/chai": "^3.5.0",
+    "@types/express": "^4.0.35",
+    "@types/mocha": "^2.2.40",
+    "@types/node": "^7.0.12",
+    "@types/request": "0.0.42",
+    "@types/socket.io": "^1.4.29",
+    "chai": "^3.5.0",
+    "concurrently": "^3.4.0",
+    "copyfiles": "^1.2.0",
+    "mocha": "^3.2.0",
+    "nodemon": "^1.11.0",
+    "npm-watch": "^0.1.8",
+    "request": "^2.81.0",
+    "typescript": "^2.2.2"
+  },
+  "dependencies": {
+    "express": "^4.15.2",
+    "mkdirp": "^0.5.1",
+    "pug": "^2.0.0-beta11",
+    "socket.io": "^1.7.3"
+  }
+}
