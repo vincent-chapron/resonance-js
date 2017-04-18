@@ -1,8 +1,10 @@
 import {Module} from '../../modules/Module';
+import {RequestHandler} from 'express';
 
 export interface IRoute {
     uri: string;
     methods?: string[];
+    middlewares?: RequestHandler[];
     action: string;
 }
 
@@ -25,6 +27,7 @@ export interface IRouter {
 
 export interface IRouting {
     controller: string;
+    middlewares?: RequestHandler[];
     prefix?: string;
     routes?: IRoute[];
     sockets?: ISocket[];
