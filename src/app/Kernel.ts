@@ -112,7 +112,7 @@ export abstract class Kernel {
                 module: moduleProvider.getModule(config.resources),
                 router: new (require(routerDir).default)(),
                 routerDir: routerDir,
-                prefix: config.prefix || '',
+                prefix: config.prefix || '',
             });
         });
     }
@@ -126,12 +126,14 @@ export abstract class Kernel {
                 let controllerDir = moduleProvider.getDirname(router.module, r.controller, 'Controller');
                 let ModController = require(controllerDir).default;
                 let controller = new ModController();
-                
+                let middlewares = r.middlewares || [];
+
                 r.routes.map(route => {
                     let action = controller[`${route.action}Action`];
-                    let methods = route.methods || ['GET'];
+                    let methods = route.methods || ['GET'];
+                    let m = [...middlewares, ...(route.middlewares || []), action];
                     methods.map(method => {
-                        this.app[method.toLowerCase()](`${prefix}${route.uri}`, action);
+                        this.app[method.toLowerCase()](`${prefix}${route.uri}`, ...m);
                     });
                 });
             });
