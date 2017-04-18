@@ -5,7 +5,7 @@
 - Typescript
 - Works with it own Module System
 
-### Architecture
+### Architecture
 
     # Project
     my-project/
@@ -39,13 +39,13 @@
 
     
 
-### Todo
+### Todo
 
 - [ ] module configuration
-- [ ] apply middlewares
+- [x] apply middlewares
 - [ ] security
 - [ ] resonance command line
 - [ ] boilerplate, compile .ts + move other files
-- [ ] orm ?
+- [ ] orm ?
 - [ ] json configuration
-- [ ] decorators configuration
+- [ ] decorators configuration
