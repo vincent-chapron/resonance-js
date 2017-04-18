@@ -45,5 +45,15 @@ describe('App >', function() {
                 done();
             });
         });
+
+        it('should apply middlewares', function(done) {
+            request.get('http://localhost:4242/app/posts/1', {}, (error, response, body) => {
+                let data = JSON.parse(body);
+                expect(data.params.global).to.be.true;
+                expect(data.params.route).to.be.true;
+                expect(data.params.undefined).to.be.undefined;
+                done();
+            });
+        });
     });
 });

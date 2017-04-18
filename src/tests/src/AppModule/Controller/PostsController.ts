@@ -6,7 +6,7 @@ export default class PostsController extends Controller {
     }
 
     getPostAction(req, res) {
-        res.json({post: req.params.id});
+        res.json({post: req.params.id, params: req.params});
     }
 
     getSocketEventAction(io, socket) {
