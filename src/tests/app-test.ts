@@ -46,6 +46,14 @@ describe('App >', function() {
             });
         });
 
+        it('should serve static files in public directories', function(done) {
+            request.get('http://localhost:4242/app/test.txt', {}, (error, response, body) => {
+                expect(response.statusCode).to.be.equal(200);
+                expect(body).to.be.equal('Fichier Texte de Test ...\n');
+                done();
+            });
+        });
+
         it('should apply middlewares', function(done) {
             request.get('http://localhost:4242/app/posts/1', {}, (error, response, body) => {
                 let data = JSON.parse(body);
