@@ -12,6 +12,10 @@ export abstract class Module {
         return path.join(this.dirname(), this.viewsDir);
     }
 
+    public getPublicDir(): string {
+        return path.join(this.dirname(), this.publicDir);
+    }
+
     public getConfigDir(): string {
         return path.join(this.dirname(), this.configDir);
     }

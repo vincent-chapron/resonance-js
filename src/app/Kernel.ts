@@ -18,6 +18,7 @@ export abstract class Kernel {
     protected server: http.Server = null;
     protected viewEngine: string = 'pug';
     protected viewsDirectories: string[] = [];
+    protected publicDirectories: string[] = [];
 
     protected abstract registerModules(): Module[];
     protected abstract dirname(): string;
@@ -48,6 +49,7 @@ export abstract class Kernel {
         this.createServer();
         this.addSettings();
         // add main middlewares
+        this.createPublicRoutes();
         this.createRoutes();
         this.createSockets();
         // add error fallback
@@ -84,7 +86,6 @@ export abstract class Kernel {
     }
 
     public generateViewsDirectories(): string[] {
-        this.addViewsDirectory(path.join(this.dirname(), '..', 'public'));
         this.modules.map(mod => this.addViewsDirectory(mod.getViewsDir()));
         return this.viewsDirectories;
     }
@@ -96,6 +97,18 @@ export abstract class Kernel {
             this.viewsDirectories.push(dir);
         }
         return this;
+    }
+
+    public createPublicRoutes() {
+        this.routers.map(router => {
+            let dir = router.module.getPublicDir();
+            if (fs.existsSync(dir)
+                    && fs.lstatSync(dir).isDirectory()
+                    && this.publicDirectories.indexOf(dir) === -1) {
+                this.publicDirectories.push(dir);
+                this.app.use(router.prefix, express.static(dir));
+            }
+        });
     }
 
     public generateRoutes() {
