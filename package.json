@@ -1,6 +1,6 @@
 {
   "name": "resonance-js",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Create real time application",
   "main": "dist/index.js",
   "typings": "src/index.ts",
@@ -27,7 +27,7 @@
     "app": "node dist/tests/app.js",
     "copy": "copyfiles 1 -e '**/*.ts' -u 1 'src/**/*' dist",
     "prepublishOnly": "npm run tsc && npm run copy",
-    "start": "npm-watch",
+    "start": "npm run tsc && npm run copy && npm-watch",
     "test": "npm run tsc && npm run copy && mocha --recursive ./dist/tests/",
     "tsc": "tsc"
   },
