@@ -1,17 +1,5 @@
 import {Module} from '../../modules/Module';
-import {RequestHandler} from 'express';
-
-export interface IRoute {
-    uri: string;
-    methods?: string[];
-    middlewares?: RequestHandler[];
-    action: string;
-}
-
-export interface ISocket {
-    event: string;
-    action: string;
-}
+import {IRouting} from './Routing';
 
 export interface IRouterConfiguration {
     prefix?: string;
@@ -25,20 +13,8 @@ export interface IRouter {
     prefix: string;
 }
 
-export interface IRouting {
-    controller: string;
-    middlewares?: RequestHandler[];
-    prefix?: string;
-    routes?: IRoute[];
-    sockets?: ISocket[];
-}
-
 export abstract class Router {
     protected routing: IRouting[] = [];
 
     public abstract registerRoutes(): IRouting[];
-}
-
-export abstract class Routing {
-     public abstract registerRouters(): IRouterConfiguration[];
 }

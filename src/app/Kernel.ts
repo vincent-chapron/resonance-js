@@ -4,7 +4,7 @@ import * as http from 'http';
 import * as express from 'express';
 import * as socket from 'socket.io';
 import {Module} from '../modules/Module';
-import {IRouter, IRouting, IRouterConfiguration} from './Routing/Router';
+import {IRouter, IRouting, IRouterConfiguration} from './Routing';
 import {ModuleProvider} from './Utils/ModuleProvider';
 
 export abstract class Kernel {
