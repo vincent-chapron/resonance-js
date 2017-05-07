@@ -14,6 +14,10 @@ export class ModuleProvider {
         return this.instance;
     }
 
+    public getModules() {
+        return this.modules;
+    }
+
     public setModules(modules: Module[]): ModuleProvider {
         this.modules = modules;
         return this;

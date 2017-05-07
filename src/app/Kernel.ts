@@ -6,11 +6,13 @@ import * as socket from 'socket.io';
 import {Module} from '../modules/Module';
 import {IRouter, IRouting, IRouterConfiguration} from './Routing';
 import {ModuleProvider} from './Utils/ModuleProvider';
+import {RouterProvider} from './Utils/RouterProvider';
 
 export abstract class Kernel {
-    protected modules: Module[];
+    protected moduleProvider: ModuleProvider;
+    protected routerProvider: RouterProvider;
+
     protected routers: IRouter[] = [];
-    protected routingDir: string;
     protected port: number;
     protected hasSocket: boolean = false;
     protected io: SocketIO.Server = null;
@@ -24,11 +26,13 @@ export abstract class Kernel {
     protected abstract dirname(): string;
 
     public constructor() {
-        this.routingDir = `${this.dirname()}/config/Routing`;
-        this.modules = this.registerModules();
-        ModuleProvider.getInstance().setModules(this.modules);
+        this.moduleProvider = ModuleProvider.getInstance();
+        this.routerProvider = RouterProvider.getInstance();
+
+        this.moduleProvider.setModules(this.registerModules());
+        this.routers = this.routerProvider.getAppRouters(this.dirname());
+
         this.generateViewsDirectories();
-        this.generateRoutes();
     }
 
     /**
@@ -40,18 +44,25 @@ export abstract class Kernel {
         this.hasSocket = true;
     }
 
+    public setViewsEngine(engine: string) {
+        this.viewEngine = engine;
+    }
+
     /**
      * Listen will run an express server
      */
     public listen(port: number) {
         this.port = port;
-        this.createApp();
-        this.createServer();
+        this.app = express();
+        this.server = http.createServer(this.app);
+
         this.addSettings();
         // add main middlewares
+
         this.createPublicRoutes();
         this.createRoutes();
         this.createSockets();
+
         // add error fallback
         this.server.listen(port);
     }
@@ -63,30 +74,14 @@ export abstract class Kernel {
         }
     }
 
-    public createApp(): express.Express {
-        if (this.app === null)
-            this.app = express();
-        return this.app;
-    }
-
-    public createServer(): http.Server {
-        if (this.server === null)
-            this.server = http.createServer(this.app);
-        return this.server;
-    }
-
-    public addSettings(): void {
+    protected addSettings(): void {
         this.app.set('view engine', this.viewEngine);
         this.app.set('views', this.viewsDirectories);
         this.app.set('port', this.port);
     }
 
-    public setViewsEngine(engine: string) {
-        this.viewEngine = engine;
-    }
-
     public generateViewsDirectories(): string[] {
-        this.modules.map(mod => this.addViewsDirectory(mod.getViewsDir()));
+        this.moduleProvider.getModules().map(mod => this.addViewsDirectory(mod.getViewsDir()));
         return this.viewsDirectories;
     }
 
@@ -108,25 +103,6 @@ export abstract class Kernel {
                 this.publicDirectories.push(dir);
                 this.app.use(router.prefix, express.static(dir));
             }
-        });
-    }
-
-    public generateRoutes() {
-        let AppRouting;
-        try {
-            AppRouting = require(this.routingDir).default;
-        } catch (e) {console.log(e); return null;}
-        let routing = new AppRouting();
-        let routers: IRouterConfiguration[] = routing.registerRouters();
-        let moduleProvider = ModuleProvider.getInstance();
-        routers.map(config => {
-            let routerDir = moduleProvider.getDirname(null, config.resources, 'Resources/config');
-            this.routers.push({
-                module: moduleProvider.getModule(config.resources),
-                router: new (require(routerDir).default)(),
-                routerDir: routerDir,
-                prefix: config.prefix || '',
-            });
         });
     }
 

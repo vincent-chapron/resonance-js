@@ -9,7 +9,7 @@ describe('App > Kernel >', function() {
     it('should load AppModule in the kernel', function() {
         let kernel = new AppKernel();
         let _kernel = (kernel as any);
-        let modules = _kernel.modules.filter(m => (m.name() === 'AppModule'));
+        let modules = _kernel.moduleProvider.getModules().filter(m => (m.name() === 'AppModule'));
 
         expect(modules).to.have.lengthOf(1);
     });
@@ -17,7 +17,7 @@ describe('App > Kernel >', function() {
     it('sould add AppBundle views directory to the kernel', function() {
         let kernel = new AppKernel();
         let _kernel = (kernel as any);
-        let modules = _kernel.modules.filter(m => (m.name() === 'AppModule'));
+        let modules = _kernel.moduleProvider.getModules().filter(m => (m.name() === 'AppModule'));
 
         let viewsDir = modules[0].getViewsDir();
         if (!(fs.existsSync(viewsDir) && fs.lstatSync(viewsDir).isDirectory())) mkdirp.sync(viewsDir);
@@ -30,7 +30,7 @@ describe('App > Kernel >', function() {
     it('sould generate good path from shortcut string', function() {
         let kernel = new AppKernel();
         let _kernel = (kernel as any);
-        let modules = _kernel.modules.filter(m => (m.name() === 'AppModule'));
+        let modules = _kernel.moduleProvider.getModules().filter(m => (m.name() === 'AppModule'));
 
         let pathProvider = ModuleProvider.getInstance();
         let c1 = pathProvider.getDirname(modules[0], 'Posts/PostsController', 'Controller');
