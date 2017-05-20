@@ -7,10 +7,12 @@ import {Module} from '../modules/Module';
 import {IRouter, IRouting, IRouterConfiguration} from './Routing';
 import {ModuleProvider} from './Utils/ModuleProvider';
 import {RouterProvider} from './Utils/RouterProvider';
+import {RouteProvider} from './Utils/RouteProvider';
 
 export abstract class Kernel {
     protected moduleProvider: ModuleProvider;
     protected routerProvider: RouterProvider;
+    protected routeProvider: RouteProvider;
 
     protected routers: IRouter[] = [];
     protected port: number;
@@ -20,7 +22,6 @@ export abstract class Kernel {
     protected server: http.Server = null;
     protected viewEngine: string = 'pug';
     protected viewsDirectories: string[] = [];
-    protected publicDirectories: string[] = [];
 
     protected abstract registerModules(): Module[];
     protected abstract dirname(): string;
@@ -28,6 +29,7 @@ export abstract class Kernel {
     public constructor() {
         this.moduleProvider = ModuleProvider.getInstance();
         this.routerProvider = RouterProvider.getInstance();
+        this.routeProvider = RouteProvider.getInstance();
 
         this.moduleProvider.setModules(this.registerModules());
         this.routers = this.routerProvider.getAppRouters(this.dirname());
@@ -59,8 +61,8 @@ export abstract class Kernel {
         this.addSettings();
         // add main middlewares
 
-        this.createPublicRoutes();
-        this.createRoutes();
+        this.app.use(this.routeProvider.applyPublicRoutes());
+        this.app.use(this.routeProvider.applyRoutes());
         this.createSockets();
 
         // add error fallback
@@ -70,6 +72,9 @@ export abstract class Kernel {
     public close() {
         if (this.server !== null) {
             this.server.close();
+            (this.moduleProvider as any)._instance = null;
+            (this.routerProvider as any)._instance = null;
+            (this.routeProvider as any)._instance = null;
             this.server = null;
         }
     }
@@ -92,41 +97,6 @@ export abstract class Kernel {
             this.viewsDirectories.push(dir);
         }
         return this;
-    }
-
-    public createPublicRoutes() {
-        this.routers.map(router => {
-            let dir = router.module.getPublicDir();
-            if (fs.existsSync(dir)
-                    && fs.lstatSync(dir).isDirectory()
-                    && this.publicDirectories.indexOf(dir) === -1) {
-                this.publicDirectories.push(dir);
-                this.app.use(router.prefix, express.static(dir));
-            }
-        });
-    }
-
-    public createRoutes() {
-        let moduleProvider = ModuleProvider.getInstance();
-        this.routers.map(router => {
-            let routing: IRouting[] = router.router.registerRoutes();
-            routing.map(r => {
-                let prefix = `${router.prefix}${r.prefix || ''}`;
-                let controllerDir = moduleProvider.getDirname(router.module, r.controller, 'Controller');
-                let ModController = require(controllerDir).default;
-                let controller = new ModController();
-                let middlewares = r.middlewares || [];
-
-                r.routes.map(route => {
-                    let action = controller[`${route.action}Action`];
-                    let methods = route.methods || ['GET'];
-                    let m = [...middlewares, ...(route.middlewares || []), action];
-                    methods.map(method => {
-                        this.app[method.toLowerCase()](`${prefix}${route.uri}`, ...m);
-                    });
-                });
-            });
-        });
     }
 
     createSockets() {
