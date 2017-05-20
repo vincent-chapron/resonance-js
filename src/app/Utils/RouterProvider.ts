@@ -19,8 +19,8 @@ export class RouterProvider {
         return this.instance;
     }
 
-    public getAppRouters(kernelDirectory: string): IRouter[] {
-        if (this.routers.length === 0) {
+    public getAppRouters(kernelDirectory: string = null): IRouter[] {
+        if (this.routers.length === 0 && kernelDirectory !== null) {
             let AppRouting, appRouting;
             try {
                 AppRouting = require(`${kernelDirectory}${this.ROUTING}`).default;
