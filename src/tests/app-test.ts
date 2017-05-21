@@ -63,5 +63,14 @@ describe('App >', function() {
                 done();
             });
         });
+
+        it('should apply global handlers', function(done) {
+            request.get('http://localhost:4242/app/posts/1', {}, (error, response, body) => {
+                let data = JSON.parse(body);
+                expect(data.params.security).to.be.false;
+                expect(data.params.router).to.be.true;
+                done();
+            });
+        });
     });
 });
