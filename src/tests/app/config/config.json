@@ -1,0 +1,5 @@
+{
+    "app_module": {
+        "host": "mysql"
+    }
+}
