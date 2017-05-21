@@ -14,8 +14,8 @@ describe('App >', function() {
             });
         });
 
-        after('close server', function() {
-            kernel.close();
+        after('destroy kernel', function() {
+            kernel.destroy();
         });
 
         it('should start server', function(done) {

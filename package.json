@@ -28,7 +28,7 @@
     "copy": "copyfiles 1 -e '**/*.ts' -u 1 'src/**/*' dist",
     "prepublishOnly": "npm run tsc && npm run copy",
     "start": "npm run tsc && npm run copy && npm-watch",
-    "test": "npm run tsc && npm run copy && mocha --recursive ./dist/tests/",
+    "test": "npm run tsc && npm run copy && mocha $(find dist/tests -name '*test.js')",
     "tsc": "tsc"
   },
   "author": "Vincent CHAPRON",

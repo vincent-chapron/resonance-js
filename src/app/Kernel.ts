@@ -4,31 +4,28 @@ import * as http from 'http';
 import * as express from 'express';
 import * as socket from 'socket.io';
 import {Module} from '../modules/Module';
-import {IRouter, IRouting, IRouterConfiguration} from './Routing/Router';
-import {ModuleProvider} from './Utils/ModuleProvider';
+import {IRouter, IRouting, IRouterConfiguration} from './Routing';
+import {ConfigProvider, ModuleProvider, RouteProvider, RouterProvider, SocketProvider, ViewProvider} from './Utils';
 
 export abstract class Kernel {
-    protected modules: Module[];
-    protected routers: IRouter[] = [];
-    protected routingDir: string;
     protected port: number;
     protected hasSocket: boolean = false;
     protected io: SocketIO.Server = null;
     protected app: express.Express = null;
     protected server: http.Server = null;
     protected viewEngine: string = 'pug';
-    protected viewsDirectories: string[] = [];
-    protected publicDirectories: string[] = [];
 
     protected abstract registerModules(): Module[];
     protected abstract dirname(): string;
 
     public constructor() {
-        this.routingDir = `${this.dirname()}/config/Routing`;
-        this.modules = this.registerModules();
-        ModuleProvider.getInstance().setModules(this.modules);
-        this.generateViewsDirectories();
-        this.generateRoutes();
+        let moduleProvider = ModuleProvider.getInstance();
+        let configProvider = ConfigProvider.getInstance();
+        let routerProvider = RouterProvider.getInstance();
+
+        moduleProvider.setModules(this.registerModules());
+        routerProvider.getAppRouters(this.dirname());
+        configProvider.getAppConfig(this.dirname());
     }
 
     /**
@@ -40,20 +37,35 @@ export abstract class Kernel {
         this.hasSocket = true;
     }
 
+    public setViewsEngine(engine: string) {
+        this.viewEngine = engine;
+    }
+
     /**
      * Listen will run an express server
      */
     public listen(port: number) {
+        let routeProvider = RouteProvider.getInstance();
+
         this.port = port;
-        this.createApp();
-        this.createServer();
+        this.app = express();
+        this.server = http.createServer(this.app);
         this.addSettings();
-        // add main middlewares
-        this.createPublicRoutes();
-        this.createRoutes();
+        // TODO: add main middlewares
+        this.app.use(routeProvider.applyPublicRoutes());
+        this.app.use(routeProvider.applyRoutes());
         this.createSockets();
-        // add error fallback
+        // TODO: add error fallback
         this.server.listen(port);
+    }
+
+    public destroy() {
+        this.close();
+        (ConfigProvider.getInstance() as any)._instance = null;
+        (ModuleProvider.getInstance() as any)._instance = null;
+        (RouterProvider.getInstance() as any)._instance = null;
+        (RouteProvider.getInstance() as any)._instance = null;
+        (ViewProvider.getInstance() as any)._instance = null;
     }
 
     public close() {
@@ -63,116 +75,19 @@ export abstract class Kernel {
         }
     }
 
-    public createApp(): express.Express {
-        if (this.app === null)
-            this.app = express();
-        return this.app;
-    }
+    protected addSettings(): void {
+        let viewProvider = ViewProvider.getInstance();
 
-    public createServer(): http.Server {
-        if (this.server === null)
-            this.server = http.createServer(this.app);
-        return this.server;
-    }
-
-    public addSettings(): void {
         this.app.set('view engine', this.viewEngine);
-        this.app.set('views', this.viewsDirectories);
+        this.app.set('views', viewProvider.getViewDirectories());
         this.app.set('port', this.port);
     }
 
-    public setViewsEngine(engine: string) {
-        this.viewEngine = engine;
-    }
-
-    public generateViewsDirectories(): string[] {
-        this.modules.map(mod => this.addViewsDirectory(mod.getViewsDir()));
-        return this.viewsDirectories;
-    }
-
-    protected addViewsDirectory(dir: string): Kernel {
-        if (fs.existsSync(dir)
-                && fs.lstatSync(dir).isDirectory()
-                && this.viewsDirectories.indexOf(dir) === -1) {
-            this.viewsDirectories.push(dir);
-        }
-        return this;
-    }
-
-    public createPublicRoutes() {
-        this.routers.map(router => {
-            let dir = router.module.getPublicDir();
-            if (fs.existsSync(dir)
-                    && fs.lstatSync(dir).isDirectory()
-                    && this.publicDirectories.indexOf(dir) === -1) {
-                this.publicDirectories.push(dir);
-                this.app.use(router.prefix, express.static(dir));
-            }
-        });
-    }
-
-    public generateRoutes() {
-        let AppRouting;
-        try {
-            AppRouting = require(this.routingDir).default;
-        } catch (e) {console.log(e); return null;}
-        let routing = new AppRouting();
-        let routers: IRouterConfiguration[] = routing.registerRouters();
-        let moduleProvider = ModuleProvider.getInstance();
-        routers.map(config => {
-            let routerDir = moduleProvider.getDirname(null, config.resources, 'Resources/config');
-            this.routers.push({
-                module: moduleProvider.getModule(config.resources),
-                router: new (require(routerDir).default)(),
-                routerDir: routerDir,
-                prefix: config.prefix || '',
-            });
-        });
-    }
-
-    public createRoutes() {
-        let moduleProvider = ModuleProvider.getInstance();
-        this.routers.map(router => {
-            let routing: IRouting[] = router.router.registerRoutes();
-            routing.map(r => {
-                let prefix = `${router.prefix}${r.prefix || ''}`;
-                let controllerDir = moduleProvider.getDirname(router.module, r.controller, 'Controller');
-                let ModController = require(controllerDir).default;
-                let controller = new ModController();
-                let middlewares = r.middlewares || [];
-
-                r.routes.map(route => {
-                    let action = controller[`${route.action}Action`];
-                    let methods = route.methods || ['GET'];
-                    let m = [...middlewares, ...(route.middlewares || []), action];
-                    methods.map(method => {
-                        this.app[method.toLowerCase()](`${prefix}${route.uri}`, ...m);
-                    });
-                });
-            });
-        });
-    }
-
-    createSockets() {
+    protected createSockets() {
         if (this.hasSocket) {
-            this.io = socket(this.server);
-            this.io.on('connection', socket => {
-                let moduleProvider = ModuleProvider.getInstance();
-                this.routers.map(router => {
-                    let routing: IRouting[] = router.router.registerRoutes();
-                    routing.map(r => {
-                        let prefix = `${router.prefix}${r.prefix || ''}`.replace(/\/+/g, ':').replace(/^:+/, '');
-                        let controllerDir = moduleProvider.getDirname(router.module, r.controller, 'Controller');
-                        let ModController = require(controllerDir).default;
-                        let controller = new ModController();
-                        
-                        r.sockets.map(s => {
-                            let action = controller[`${s.action}Action`];
-                            socket.on(`${prefix}${s.event}`, action(this.io, socket));
-                        });
-                    });
-                });
-            });
+            let socketProvider = SocketProvider.getInstance();
+
+            this.io = socketProvider.applySockets(this.server);
         }
     }
 }
