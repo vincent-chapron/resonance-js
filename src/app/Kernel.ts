@@ -59,13 +59,18 @@ export abstract class Kernel {
         this.server.listen(port);
     }
 
+    public destroy() {
+        this.close();
+        (ConfigProvider.getInstance() as any)._instance = null;
+        (ModuleProvider.getInstance() as any)._instance = null;
+        (RouterProvider.getInstance() as any)._instance = null;
+        (RouteProvider.getInstance() as any)._instance = null;
+        (ViewProvider.getInstance() as any)._instance = null;
+    }
+
     public close() {
         if (this.server !== null) {
             this.server.close();
-            (ModuleProvider.getInstance() as any)._instance = null;
-            (RouterProvider.getInstance() as any)._instance = null;
-            (RouteProvider.getInstance() as any)._instance = null;
-            (ViewProvider.getInstance() as any)._instance = null;
             this.server = null;
         }
     }
