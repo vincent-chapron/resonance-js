@@ -35,7 +35,7 @@ export class Config implements IConfig, IConfigArray, IConfigString, IConfigNumb
 
     protected name: string;
     protected parent: Config = null;
-    protected type: number = null;
+    protected type: number = Config.TYPE_OBJ;
     protected keys: Config[] = [];
     protected value: any = null;
     protected required: boolean = true;
@@ -111,7 +111,13 @@ export class Config implements IConfig, IConfigArray, IConfigString, IConfigNumb
     }
 
     public getValue() {
-        return this.value;
+        if (this.type !== Config.TYPE_OBJ) {
+            return this.value;
+        } else {
+            let value = {};
+            this.keys.map(key => value[key.name] = key.getValue());
+            return value;
+        }
     }
 
     public push(config: Config) {
