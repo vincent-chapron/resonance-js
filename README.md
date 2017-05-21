@@ -11,6 +11,7 @@
     my-project/
         app/
             config/
+                config.json     # json modules configuration
                 Routing.ts      # Load Modules routes
             AppKernel.ts        # Register Modules
         bin/                    # WIP
@@ -36,16 +37,3 @@
             views/
                 posts.pug               # Create your own views
         AppModule.ts
-
-    
-
-### Todo
-
-- [ ] module configuration
-- [x] apply middlewares
-- [ ] security
-- [ ] resonance command line
-- [ ] boilerplate, compile .ts + move other files
-- [ ] orm ?
-- [ ] json configuration
-- [ ] decorators configuration
