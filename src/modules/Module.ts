@@ -1,4 +1,5 @@
 import * as path from 'path';
+import {Config} from '../app';
 
 export abstract class Module {
     protected configDir: string = 'Resources/Config';
@@ -20,7 +21,11 @@ export abstract class Module {
         return path.join(this.dirname(), this.configDir);
     }
 
+    public addConfiguration(): Config {
+        return null;
+    }
+
     public loadRoute() {
-        
+
     }
 }
