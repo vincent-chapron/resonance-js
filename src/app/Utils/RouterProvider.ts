@@ -1,4 +1,5 @@
-import {IRouterConfiguration, IRouter} from '../Routing';
+import {Application, RequestHandler} from 'express';
+import {IRouterConfiguration, IRouter, IExpressRouter} from '../Routing';
 import {ModuleProvider} from './ModuleProvider';
 
 export class RouterProvider {
@@ -7,6 +8,7 @@ export class RouterProvider {
     public readonly ROUTING: string = '/config/Routing';
     protected moduleProvider: ModuleProvider;
     protected routers: IRouter[] = [];
+    protected handlers: RequestHandler[] = [];
 
     private constructor() {
         this.moduleProvider = ModuleProvider.getInstance();
@@ -44,5 +46,15 @@ export class RouterProvider {
             routerDir: routerDirectory,
             prefix: config.prefix || '',
         });
+    }
+
+    public getHandlers(): RequestHandler[] {
+        if (this.handlers.length === 0) {
+            let expressRouters: IExpressRouter[] = [];
+            this.routers.map(router => expressRouters = [...expressRouters, ...router.router.registerRouter()]);
+            expressRouters.sort((a, b) => b.getPriority() - a.getPriority());
+            expressRouters.map(router => router.getHandlers().map(handler => this.handlers.push(handler)));
+        }
+        return this.handlers;
     }
 }
