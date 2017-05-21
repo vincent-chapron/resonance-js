@@ -5,7 +5,7 @@ import * as express from 'express';
 import * as socket from 'socket.io';
 import {Module} from '../modules/Module';
 import {IRouter, IRouting, IRouterConfiguration} from './Routing';
-import {ModuleProvider, RouteProvider, RouterProvider, ViewProvider} from './Utils';
+import {ModuleProvider, RouteProvider, RouterProvider, SocketProvider, ViewProvider} from './Utils';
 
 export abstract class Kernel {
     protected port: number;
@@ -48,14 +48,11 @@ export abstract class Kernel {
         this.port = port;
         this.app = express();
         this.server = http.createServer(this.app);
-
         this.addSettings();
         // TODO: add main middlewares
-
         this.app.use(routeProvider.applyPublicRoutes());
         this.app.use(routeProvider.applyRoutes());
         this.createSockets();
-
         // TODO: add error fallback
         this.server.listen(port);
     }
@@ -79,28 +76,11 @@ export abstract class Kernel {
         this.app.set('port', this.port);
     }
 
-    createSockets() {
+    protected createSockets() {
         if (this.hasSocket) {
-            let routers = RouterProvider.getInstance().getAppRouters();
+            let socketProvider = SocketProvider.getInstance();
 
-            this.io = socket(this.server);
-            this.io.on('connection', socket => {
-                let moduleProvider = ModuleProvider.getInstance();
-                routers.map(router => {
-                    let routing: IRouting[] = router.router.registerRoutes();
-                    routing.map(r => {
-                        let prefix = `${router.prefix}${r.prefix || ''}`.replace(/\/+/g, ':').replace(/^:+/, '');
-                        let controllerDir = moduleProvider.getDirname(router.module, r.controller, 'Controller');
-                        let ModController = require(controllerDir).default;
-                        let controller = new ModController();
-                        
-                        r.sockets.map(s => {
-                            let action = controller[`${s.action}Action`];
-                            socket.on(`${prefix}${s.event}`, action(this.io, socket));
-                        });
-                    });
-                });
-            });
+            this.io = socketProvider.applySockets(this.server);
         }
     }
 }

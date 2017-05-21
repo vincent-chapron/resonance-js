@@ -5,7 +5,7 @@ export class ViewProvider {
     private static instance: ViewProvider = null;
 
     protected moduleProvider: ModuleProvider;
-    protected viewsDirectories: string[];
+    protected viewsDirectories: string[] = [];
 
     private constructor() {
         this.moduleProvider = ModuleProvider.getInstance();
