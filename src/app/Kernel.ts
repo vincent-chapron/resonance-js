@@ -5,7 +5,7 @@ import * as express from 'express';
 import * as socket from 'socket.io';
 import {Module} from '../modules/Module';
 import {IRouter, IRouting, IRouterConfiguration} from './Routing';
-import {ModuleProvider, RouteProvider, RouterProvider, SocketProvider, ViewProvider} from './Utils';
+import {ConfigProvider, ModuleProvider, RouteProvider, RouterProvider, SocketProvider, ViewProvider} from './Utils';
 
 export abstract class Kernel {
     protected port: number;
@@ -20,10 +20,12 @@ export abstract class Kernel {
 
     public constructor() {
         let moduleProvider = ModuleProvider.getInstance();
+        let configProvider = ConfigProvider.getInstance();
         let routerProvider = RouterProvider.getInstance();
 
         moduleProvider.setModules(this.registerModules());
         routerProvider.getAppRouters(this.dirname());
+        configProvider.getAppConfig(this.dirname());
     }
 
     /**
