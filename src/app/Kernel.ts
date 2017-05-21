@@ -51,7 +51,6 @@ export abstract class Kernel {
         this.app = express();
         this.server = http.createServer(this.app);
         this.addSettings();
-        // TODO: add main middlewares
         this.app.use(routeProvider.applyPublicRoutes());
         this.app.use(routeProvider.applyRoutes());
         this.createSockets();

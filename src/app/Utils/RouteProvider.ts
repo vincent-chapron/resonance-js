@@ -23,9 +23,11 @@ export class RouteProvider {
         return this.instance;
     }
 
-    public applyRoutes(): express.Router {
+    public applyRoutes() {
         let routers: IRouter[] = this.routerProvider.getAppRouters();
         let expressRouter = express.Router();
+        let handlers = RouterProvider.getInstance().getHandlers();
+
         routers.map(router => {
             let routing: IRouting[] = router.router.registerRoutes();
             routing.map(r => {
@@ -38,7 +40,7 @@ export class RouteProvider {
                 r.routes.map(route => {
                     let action = controller[`${route.action}Action`];
                     let methods = route.methods || ['GET'];
-                    let m = [...middlewares, ...(route.middlewares || []), action];
+                    let m = [...handlers, ...middlewares, ...(route.middlewares || []), action];
                     methods.map(method => {
                         expressRouter[method.toLowerCase()](`${prefix}${route.uri}`, ...m);
                     });
