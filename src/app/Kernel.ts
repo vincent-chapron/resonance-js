@@ -45,14 +45,11 @@ export abstract class Kernel {
      * Listen will run an express server
      */
     public listen(port: number) {
-        let routeProvider = RouteProvider.getInstance();
-
         this.port = port;
-        this.app = express();
-        this.server = http.createServer(this.app);
+        this.createApp();
+        this.createServer();
         this.addSettings();
-        this.app.use(routeProvider.applyPublicRoutes());
-        this.app.use(routeProvider.applyRoutes());
+        this.applyRoutes();
         this.createSockets();
         // TODO: add error fallback
         this.server.listen(port);
@@ -74,12 +71,31 @@ export abstract class Kernel {
         }
     }
 
+    /**
+     * Can be override
+     * this.app.use(...)
+     */
+    protected createApp() {
+        this.app = express();
+    }
+
+    protected createServer() {
+        this.server = http.createServer(this.app);
+    }
+
     protected addSettings(): void {
         let viewProvider = ViewProvider.getInstance();
 
         this.app.set('view engine', this.viewEngine);
         this.app.set('views', viewProvider.getViewDirectories());
         this.app.set('port', this.port);
+    }
+
+    protected applyRoutes() {
+        let routeProvider = RouteProvider.getInstance();
+
+        this.app.use(routeProvider.applyPublicRoutes());
+        this.app.use(routeProvider.applyRoutes());
     }
 
     protected createSockets() {
