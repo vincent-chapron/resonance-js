@@ -1,3 +1,4 @@
+import * as express from 'express';
 import {Module, Config} from '../../../';
 
 export default class AppModule extends Module {
@@ -20,5 +21,9 @@ export default class AppModule extends Module {
          .end()
         .end();
         return c;
+    }
+
+    public appCreated(app: express.Express) {
+        app.get('/appmodule/appcreated', (req, res) => res.json({success: true}));
     }
 }

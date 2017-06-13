@@ -72,5 +72,13 @@ describe('App >', function() {
                 done();
             });
         });
+
+        it('should execute appCreated modules methods', function(done) {
+            request.get('http://localhost:4242/appmodule/appcreated', {}, (error, response, body) => {
+                let data = JSON.parse(body);
+                expect(data.success).to.be.true;
+                done();
+            });
+        });
     });
 });
