@@ -45,14 +45,18 @@ export abstract class Kernel {
      * Listen will run an express server
      */
     public listen(port: number) {
+        let moduleProvider = ModuleProvider.getInstance();
+
         this.port = port;
         this.createApp();
         this.createServer();
+        moduleProvider.getModules().map(m => m.appCreated(this.app))
         this.addSettings();
         this.applyRoutes();
         this.createSockets();
         // TODO: add error fallback
         this.server.listen(port);
+        this.server.on('listening', () => moduleProvider.getModules().map(m => m.serverListening()));
     }
 
     public destroy() {

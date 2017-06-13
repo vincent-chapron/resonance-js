@@ -1,4 +1,5 @@
 import * as path from 'path';
+import * as express from 'express';
 import {Config} from '../app';
 
 export abstract class Module {
@@ -28,4 +29,8 @@ export abstract class Module {
     public loadRoute() {
 
     }
+
+    public appCreated(app: express.Express) {}
+    public serverListening() {}
+    public serverFailed() {}
 }
