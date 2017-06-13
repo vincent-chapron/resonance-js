@@ -1,6 +1,6 @@
 {
   "name": "resonance-js",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "Create real time application",
   "main": "dist/index.js",
   "typings": "src/index.ts",
